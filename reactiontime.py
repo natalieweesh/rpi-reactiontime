@@ -19,6 +19,7 @@ sound_left = Sound("sounds/drum_cymbal_open.wav")
 sound_right = Sound("sounds/drum_tom_mid_hard.wav")
 sound_beep = Sound("sounds/elec_blip.wav")
 sound_boom = Sound("sounds/elec_blup.wav")
+sound_chime = Sound("sounds/elec_chime.wav")
 led_left = LED(7, initial_value=False)
 led_right = LED(8, initial_value=False)
 rgb_led = RGBLED(5, 6, 13)
@@ -67,21 +68,38 @@ def press(which):
     else:
         led_right.on()
 
+def false_start(which):
+    global message_printed
+    if not message_printed:
+        if which == "left":
+            led_right.on()
+            print("FALSE START by LEFT button. RIGHT wins by default!")
+        else:
+            led_left.on()
+            print("FALSE START by RIGHT button. LEFT wins by default!")
+        message_printed = True
+        end_game()
+
 def main():
     global start_time
     print("game will start in 5 seconds")
-    time.sleep(5)
-    sound_boom.play()
+    for i in range(0,5):
+        sound_boom.play()
+        time.sleep(1)
+    sound_chime.play()
     print("OK! press the button when you see the light...")
+    button_left.when_pressed = wrapped_partial(false_start, which="left")
+    button_right.when_pressed = wrapped_partial(false_start, which="right")
+
     rand = random.random() * 5
     time.sleep(rand)
-    sound_beep.play()
-    rgb_led.color = (0, 1, 0)
-    start_time = datetime.datetime.now()
+    if not message_printed:
+        sound_beep.play()
+        rgb_led.color = (0, 1, 0)
+        start_time = datetime.datetime.now()
 
-
-    button_left.when_pressed = wrapped_partial(press, which="left")
-    button_right.when_pressed = wrapped_partial(press, which="right")
+        button_left.when_pressed = wrapped_partial(press, which="left")
+        button_right.when_pressed = wrapped_partial(press, which="right")
 
     pause()
 
